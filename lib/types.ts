@@ -78,6 +78,8 @@ export interface BirdeyeTokenOverview {
   logoURI?: string;
   liquidity: number;
   mc: number;
+  marketCap?: number;
+  fdv?: number;
   v24hUSD: number;
   v24hChangePercent: number;
   holder: number;
