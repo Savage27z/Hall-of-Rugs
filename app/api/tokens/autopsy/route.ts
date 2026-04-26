@@ -31,6 +31,14 @@ function safeNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function firstPositive(...values: unknown[]): number {
+  for (const value of values) {
+    const n = safeNumber(value, NaN);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+
 function safeText(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim().length > 0
     ? value
@@ -86,9 +94,13 @@ function buildOverviewPriceHistory(
 function currentMarketCap(overview: BirdeyeTokenOverview): number {
   const price = safeNumber(overview.price);
   const supply = safeNumber(overview.supply);
-  return safeNumber(
+  return firstPositive(
     overview.mc,
-    safeNumber(overview.realMc, supply > 0 && price > 0 ? supply * price : 0)
+    overview.realMc,
+    overview.marketCap,
+    overview.fdv,
+    supply > 0 && price > 0 ? supply * price : 0,
+    safeNumber(overview.liquidity) * 10
   );
 }
 
