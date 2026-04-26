@@ -16,6 +16,8 @@ import type {
   DeadToken,
   AutopsyResult,
   SecurityFlag,
+  OHLCVPoint,
+  BirdeyeTokenOverview,
 } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +35,43 @@ function safeText(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim().length > 0
     ? value
     : fallback;
+}
+
+function normalizePercent(value: unknown): number {
+  const n = safeNumber(value);
+  return n > 0 && n <= 1 ? n * 100 : n;
+}
+
+function buildOverviewPriceHistory(
+  overview: BirdeyeTokenOverview,
+  currentPrice: number
+): OHLCVPoint[] {
+  const now = Date.now();
+  const points = [
+    { offsetMs: 24 * 60 * 60 * 1000, price: overview.history24hPrice },
+    { offsetMs: 12 * 60 * 60 * 1000, price: overview.history12hPrice },
+    { offsetMs: 8 * 60 * 60 * 1000, price: overview.history8hPrice },
+    { offsetMs: 6 * 60 * 60 * 1000, price: overview.history6hPrice },
+    { offsetMs: 4 * 60 * 60 * 1000, price: overview.history4hPrice },
+    { offsetMs: 2 * 60 * 60 * 1000, price: overview.history2hPrice },
+    { offsetMs: 60 * 60 * 1000, price: overview.history1hPrice },
+    { offsetMs: 30 * 60 * 1000, price: overview.history30mPrice },
+    { offsetMs: 0, price: currentPrice },
+  ];
+
+  return points
+    .map(({ offsetMs, price }) => {
+      const close = safeNumber(price, NaN);
+      return {
+        timestamp: now - offsetMs,
+        open: close,
+        high: close,
+        low: close,
+        close,
+        volume: 0,
+      };
+    })
+    .filter((point) => Number.isFinite(point.close));
 }
 
 export async function GET(request: Request) {
@@ -81,16 +120,26 @@ export async function GET(request: Request) {
     // Birdeye endpoint: /defi/token_security
     const security = await getTokenSecurity(address);
 
+    const nowSeconds = Math.floor(Date.now() / 1000);
     const createdAt = overview.createdAt
-      ? overview.createdAt
-      : Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
+      ? Math.max(overview.createdAt, nowSeconds - 30 * 24 * 60 * 60)
+      : nowSeconds - 7 * 24 * 60 * 60;
     // Birdeye endpoint: /defi/ohlcv
-    const ohlcv = await getTokenOHLCV(
+    let ohlcv = await getTokenOHLCV(
       address,
       createdAt,
-      Math.floor(Date.now() / 1000),
+      nowSeconds,
       "1H"
     );
+    if (ohlcv.length === 0) {
+      // Birdeye endpoint: /defi/ohlcv
+      ohlcv = await getTokenOHLCV(
+        address,
+        nowSeconds - 24 * 60 * 60,
+        nowSeconds,
+        "30m"
+      );
+    }
 
     // Birdeye endpoint: /defi/price
     const priceData = await getTokenPrice(address);
@@ -147,14 +196,16 @@ export async function GET(request: Request) {
       upsertDeadToken(token);
     }
 
-    const securityFlags = buildSecurityFlags(security);
+    const currentPrice = safeNumber(priceData?.value, price);
+    const securityFlags = buildSecurityFlags(security, overview);
+    const overviewHistory = buildOverviewPriceHistory(overview, currentPrice);
 
     const autopsyResult: AutopsyResult = {
       token,
-      priceHistory: ohlcv,
+      priceHistory: ohlcv.length > 0 ? ohlcv : overviewHistory,
       securityFlags,
-      topHoldersPct: safeNumber(security?.top10HolderPercent),
-      currentPrice: safeNumber(priceData?.value, price),
+      topHoldersPct: normalizePercent(security?.top10HolderPercent),
+      currentPrice,
       currentLiquidity: liquidity,
       peakLiquidity:
         metrics.liquidityRemovedPct >= 100
@@ -200,47 +251,71 @@ function buildCachedAutopsy(token: DeadToken): NextResponse {
 
 function buildSecurityFlags(
   security: {
-    mintAuthority?: string;
-    freezeAuthority?: string;
-    mutableMetadata: boolean;
-    top10HolderPercent: number;
+    ownerAddress?: string | null;
+    creatorAddress?: string | null;
+    metaplexUpdateAuthority?: string | null;
+    mintAuthority?: string | null;
+    freezeAuthority?: string | null;
+    freezeable?: boolean | null;
+    mutableMetadata: boolean | null;
+    top10HolderPercent: number | null;
     isHoneypot?: boolean;
     transferFeeEnable?: boolean;
     nonTransferable?: boolean;
     top10UserPercent?: number;
-  } | null
+    lockInfo?: unknown;
+  } | null,
+  overview?: BirdeyeTokenOverview
 ): SecurityFlag[] {
   if (!security) {
     return [
       {
         label: "Security Data",
         danger: true,
-        detail: "Unable to fetch security data",
+        detail: overview
+          ? "Birdeye token_security unavailable; showing live overview data only"
+          : "Unable to fetch security data",
       },
+      ...(overview
+        ? [
+            {
+              label: "Live Liquidity",
+              danger: safeNumber(overview.liquidity) <= 0,
+              detail: `$${Math.round(safeNumber(overview.liquidity)).toLocaleString("en-US")} reported by token_overview`,
+            },
+            {
+              label: "Holder Count",
+              danger: safeNumber(overview.holder) < 50,
+              detail: `${Math.round(safeNumber(overview.holder)).toLocaleString("en-US")} holders reported by token_overview`,
+            },
+          ]
+        : []),
     ];
   }
 
   const flags: SecurityFlag[] = [];
+  const mintAuthority = security.mintAuthority ?? security.ownerAddress;
+  const top10HolderPercent = normalizePercent(security.top10HolderPercent);
 
   flags.push({
     label: "Mint Authority",
-    danger: !!security.mintAuthority,
-    detail: security.mintAuthority
+    danger: !!mintAuthority,
+    detail: mintAuthority
       ? "Active — can mint unlimited tokens"
       : "Revoked",
   });
 
   flags.push({
     label: "Freeze Authority",
-    danger: !!security.freezeAuthority,
-    detail: security.freezeAuthority
+    danger: !!security.freezeAuthority || security.freezeable === true,
+    detail: security.freezeAuthority || security.freezeable === true
       ? "Active — can freeze holder wallets"
       : "Revoked",
   });
 
   flags.push({
     label: "Mutable Metadata",
-    danger: security.mutableMetadata,
+    danger: security.mutableMetadata === true,
     detail: security.mutableMetadata
       ? "Metadata can be changed by creator"
       : "Metadata is immutable",
@@ -248,8 +323,10 @@ function buildSecurityFlags(
 
   flags.push({
     label: "Top 10 Holder Concentration",
-    danger: security.top10HolderPercent > 50,
-    detail: `Top 10 wallets hold ${security.top10HolderPercent.toFixed(1)}% of supply`,
+    danger: top10HolderPercent > 50,
+    detail: top10HolderPercent > 0
+      ? `Top 10 wallets hold ${top10HolderPercent.toFixed(1)}% of supply`
+      : "Birdeye did not return holder concentration for this token",
   });
 
   flags.push({
@@ -258,6 +335,14 @@ function buildSecurityFlags(
     detail: security.isHoneypot
       ? "Suspicious sell restrictions detected"
       : "No restrictions detected",
+  });
+
+  flags.push({
+    label: "Liquidity Lock",
+    danger: !security.lockInfo,
+    detail: security.lockInfo
+      ? "Liquidity lock info returned by Birdeye"
+      : "No liquidity lock info returned by Birdeye",
   });
 
   if (security.transferFeeEnable) {

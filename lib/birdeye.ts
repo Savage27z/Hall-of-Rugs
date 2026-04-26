@@ -133,6 +133,8 @@ export async function getTokenOHLCV(
     {
       address,
       type: resolution,
+      currency: "usd",
+      ui_amount_mode: "raw",
       time_from: from.toString(),
       time_to: to.toString(),
     }
@@ -218,5 +220,4 @@ export async function getWalletTokens(
     valueUsd: i.valueUsd,
   }));
 }
-
 
