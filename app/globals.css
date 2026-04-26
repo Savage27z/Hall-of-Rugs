@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+:root {
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'DM Sans', sans-serif;
+  --color-bg: #080808;
+  --color-surface: #0f0f0f;
+  --color-border: #1a1a1a;
+  --color-accent: #dc2626;
+  --color-white: #ffffff;
+  --color-muted: #525252;
+  --color-mono: #a3a3a3;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-white);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+::selection {
+  background: rgba(220, 38, 38, 0.3);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+.card-noise {
+  position: relative;
+}
+
+.card-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px;
+  border-radius: inherit;
+}
+
+.hero-glow {
+  position: relative;
+}
+
+.hero-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.flatline-container {
+  position: relative;
+  height: 40px;
+  overflow: hidden;
+}
+
+.flatline-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-accent);
+  transform: translateY(-50%);
+  animation: flatline-pulse 3s ease-in-out infinite;
+}
+
+.flatline-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -8px;
+  width: 100%;
+  height: 18px;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      transparent 10%,
+      transparent 15%,
+      var(--color-bg) 15%,
+      var(--color-bg) 20%,
+      transparent 20%,
+      transparent 22%,
+      transparent 25%,
+      var(--color-bg) 25%,
+      var(--color-bg) 100%
+    );
+}
+
+@keyframes flatline-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.flatline-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 5%;
+  width: 15%;
+  height: 20px;
+  background: 
+    linear-gradient(90deg,
+      transparent 0%,
+      transparent 20%,
+      var(--color-accent) 25%,
+      transparent 25%,
+      transparent 35%,
+      var(--color-accent) 40%,
+      transparent 40%,
+      transparent 50%,
+      var(--color-accent) 55%,
+      var(--color-accent) 60%,
+      transparent 60%,
+      transparent 70%,
+      var(--color-accent) 75%,
+      transparent 80%,
+      transparent 100%
+    );
+  opacity: 0.4;
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: center;
+  animation: ekg-sweep 3s ease-in-out infinite;
+}
+
+@keyframes ekg-sweep {
+  0% { transform: translateY(-50%) translateX(-20%); opacity: 0; }
+  20% { opacity: 0.6; }
+  60% { opacity: 0.3; }
+  100% { transform: translateY(-50%) translateX(500%); opacity: 0; }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 400ms ease-out forwards;
+  }
+}

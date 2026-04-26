@@ -1,0 +1,7 @@
+node_modules/
+.next/
+.data/
+api_calls.log
+.env
+.env.local
+*.sqlite
