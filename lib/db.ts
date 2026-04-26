@@ -230,18 +230,7 @@ function rowToDeadToken(row: DeadTokenRow): DeadToken {
 
 export function purgeDemoData(): void {
   const db = getDb();
-  const demoSymbols = [
-    "SAFERUG", "ELONCAT", "MOONDOGE", "GRAVEYARD", "SLOWDEATH",
-    "TRUSTME", "GHOSTCHAIN", "DEFINOT", "YOLOCOIN", "RUGSAFE",
-    "WAGMI2", "PUMP69",
-  ];
   db.prepare(
     `DELETE FROM dead_tokens WHERE address LIKE 'HoRDead%'`
   ).run();
-  const deleteBySymbol = db.prepare(
-    "DELETE FROM dead_tokens WHERE symbol = ?"
-  );
-  for (const sym of demoSymbols) {
-    deleteBySymbol.run(sym);
-  }
 }

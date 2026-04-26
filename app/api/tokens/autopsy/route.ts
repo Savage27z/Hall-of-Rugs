@@ -294,7 +294,7 @@ function buildSecurityFlags(
   }
 
   const flags: SecurityFlag[] = [];
-  const mintAuthority = security.mintAuthority ?? security.ownerAddress;
+  const mintAuthority = security.mintAuthority;
   const top10HolderPercent = normalizePercent(security.top10HolderPercent);
 
   flags.push({
