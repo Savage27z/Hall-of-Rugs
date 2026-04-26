@@ -83,6 +83,38 @@ function buildOverviewPriceHistory(
     .filter((point) => Number.isFinite(point.close));
 }
 
+function estimatePeakMarketCap(overview: BirdeyeTokenOverview): number {
+  const currentPrice = safeNumber(overview.price);
+  const currentMarketCap = safeNumber(overview.mc, safeNumber(overview.realMc));
+  const historicalPrices = [
+    overview.history24hPrice,
+    overview.history12hPrice,
+    overview.history8hPrice,
+    overview.history6hPrice,
+    overview.history4hPrice,
+    overview.history2hPrice,
+    overview.history1hPrice,
+    overview.history30mPrice,
+    currentPrice,
+  ]
+    .map((value) => safeNumber(value, NaN))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const maxObservedPrice = Math.max(currentPrice, ...historicalPrices);
+  const supply = safeNumber(overview.supply);
+  const priceDerivedPeak = supply > 0 ? maxObservedPrice * supply : 0;
+  const currentScaledPeak =
+    currentPrice > 0 && currentMarketCap > 0
+      ? currentMarketCap * (maxObservedPrice / currentPrice)
+      : 0;
+
+  return Math.max(
+    currentMarketCap,
+    safeNumber(overview.realMc),
+    priceDerivedPeak,
+    currentScaledPeak
+  );
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get("address") ?? "";
@@ -159,7 +191,7 @@ export async function GET(request: Request) {
     const holders = safeNumber(overview.holder);
     const price = safeNumber(overview.price);
     const history24hPrice = safeNumber(overview.history24hPrice, price);
-    const realMarketCap = safeNumber(overview.realMc, marketCap > 0 ? marketCap * 1.2 : 0);
+    const peakMarketCap = estimatePeakMarketCap(overview);
     const createdAtSeconds = safeNumber(overview.createdAt);
     const lastTradeUnixTime = safeNumber(overview.lastTradeUnixTime);
 
@@ -174,7 +206,7 @@ export async function GET(request: Request) {
         ? createdAtSeconds * 1000
         : undefined,
       lastTradeUnixTime,
-      peakMcap: realMarketCap,
+      peakMcap: peakMarketCap,
     });
 
     const result = classify(metrics);

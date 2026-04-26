@@ -26,6 +26,41 @@ function safeText(value: unknown, fallback: string): string {
     : fallback;
 }
 
+function estimatePeakMarketCap(overview: BirdeyeTokenOverview): number {
+  const currentPrice = safeNumber(overview.price);
+  const currentMarketCap = safeNumber(
+    overview.mc,
+    safeNumber(overview.realMc, safeNumber(overview.liquidity) * 10)
+  );
+  const historicalPrices = [
+    overview.history24hPrice,
+    overview.history12hPrice,
+    overview.history8hPrice,
+    overview.history6hPrice,
+    overview.history4hPrice,
+    overview.history2hPrice,
+    overview.history1hPrice,
+    overview.history30mPrice,
+    currentPrice,
+  ]
+    .map((value) => safeNumber(value, NaN))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const maxObservedPrice = Math.max(currentPrice, ...historicalPrices);
+  const supply = safeNumber(overview.supply);
+  const priceDerivedPeak = supply > 0 ? maxObservedPrice * supply : 0;
+  const currentScaledPeak =
+    currentPrice > 0 && currentMarketCap > 0
+      ? currentMarketCap * (maxObservedPrice / currentPrice)
+      : 0;
+
+  return Math.max(
+    currentMarketCap,
+    safeNumber(overview.realMc),
+    priceDerivedPeak,
+    currentScaledPeak
+  );
+}
+
 function normalizeOverview(overview: BirdeyeTokenOverview) {
   const price = safeNumber(overview.price);
   const marketCap = safeNumber(
@@ -33,6 +68,7 @@ function normalizeOverview(overview: BirdeyeTokenOverview) {
     safeNumber(overview.realMc, safeNumber(overview.liquidity) * 10)
   );
   const history24hPrice = safeNumber(overview.history24hPrice, price);
+  const peakMcap = estimatePeakMarketCap(overview);
   return {
     liquidity: safeNumber(overview.liquidity),
     marketCap,
@@ -43,7 +79,7 @@ function normalizeOverview(overview: BirdeyeTokenOverview) {
     priceChange24hPercent: safeNumber(overview.priceChange24hPercent),
     createdAtMs: overview.createdAt ? safeNumber(overview.createdAt) * 1000 : undefined,
     lastTradeUnixTime: safeNumber(overview.lastTradeUnixTime),
-    peakMcap: safeNumber(overview.realMc, marketCap > 0 ? marketCap * 1.2 : 0),
+    peakMcap,
   };
 }
 
