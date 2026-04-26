@@ -233,4 +233,25 @@ export function purgeDemoData(): void {
   db.prepare(
     `DELETE FROM dead_tokens WHERE address LIKE 'HoRDead%'`
   ).run();
+
+  const legacyMockRows = [
+    ["7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU", "SAFERUG"],
+    ["DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", "ELONCAT"],
+    ["EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "MOONDOGE"],
+    ["So11111111111111111111111111111111111111112", "GRAVEYARD"],
+    ["mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So", "SLOWDEATH"],
+    ["4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", "TRUSTME"],
+    ["JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", "GHOSTCHAIN"],
+    ["Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "DEFINOT"],
+    ["HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3", "YOLOCOIN"],
+    ["orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE", "RUGSAFE"],
+    ["AURY1snxMoS7L6dfnMzaKe3VDMSfJ3Lfk6V4P7gRb27P", "WAGMI2"],
+    ["3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh", "PUMP69"],
+  ];
+  const deleteLegacyMock = db.prepare(
+    "DELETE FROM dead_tokens WHERE address = ? AND symbol = ?"
+  );
+  for (const [address, symbol] of legacyMockRows) {
+    deleteLegacyMock.run(address, symbol);
+  }
 }
