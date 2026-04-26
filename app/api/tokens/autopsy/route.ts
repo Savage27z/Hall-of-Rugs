@@ -143,6 +143,15 @@ function classifyDegradedToken(
     };
   }
 
+  if (metrics.priceDropPct >= 90 && market.marketCap < 5_000) {
+    return {
+      verdict: "RUGGED",
+      cause: "Real Birdeye data shows 90%+ drawdown and current market cap below $5k",
+      brutalityScore: Math.min(100, Math.max(75, Math.round(metrics.priceDropPct))),
+      timeToDeathHours: Math.max(1, Math.round(metrics.ageHours * 10) / 10),
+    };
+  }
+
   if (
     market.peakMcap > 0 &&
     market.peakMcap < 10_000 &&
