@@ -44,8 +44,9 @@ async function birdeyeFetch<T>(
   const paramStr = new URLSearchParams(params).toString();
   const cached = getCachedResponse(endpoint, tokenAddress, paramStr);
   if (cached && Date.now() - cached.fetched_at < cacheTtlMs) {
+    const isSuccessful = cached.status_code >= 200 && cached.status_code < 300;
     return {
-      data: JSON.parse(cached.response_json) as T,
+      data: isSuccessful ? (JSON.parse(cached.response_json) as T) : null,
       status: cached.status_code,
       fromCache: true,
     };
@@ -73,7 +74,7 @@ async function birdeyeFetch<T>(
     logApiCall(endpoint, tokenAddress, status);
 
     if (!res.ok) {
-      setCachedResponse(endpoint, tokenAddress, paramStr, "{}", status);
+      setCachedResponse(endpoint, tokenAddress, paramStr, "null", status);
       return { data: null, status, fromCache: false };
     }
 

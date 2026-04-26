@@ -134,7 +134,10 @@ export async function GET(request: Request) {
         topHoldersPct: security?.top10HolderPercent ?? 0,
         currentPrice: priceData?.value ?? overview.price,
         currentLiquidity: overview.liquidity,
-        peakLiquidity: overview.liquidity * (1 + metrics.liquidityRemovedPct / 100),
+        peakLiquidity:
+          metrics.liquidityRemovedPct >= 100
+            ? overview.liquidity
+            : overview.liquidity / (1 - metrics.liquidityRemovedPct / 100),
       };
 
       return NextResponse.json(autopsyResult);
