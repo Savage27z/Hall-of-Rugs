@@ -58,7 +58,7 @@ Built for Birdeye Data BIP Competition Sprint 2 — April 2026
 ## Setup
 
 ```bash
-git clone https://github.com/Pyrex-13/Hall-of-Rugs.git
+git clone https://github.com/savage27z/Hall-of-Rugs.git
 cd Hall-of-Rugs
 cp .env.example .env       # Add your BIRDEYE_API_KEY
 npm install
