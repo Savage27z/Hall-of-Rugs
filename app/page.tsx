@@ -6,6 +6,7 @@ import type { DeadToken, DayStats, FilterType, SortType } from "@/lib/types";
 import DeathCertificateCard from "@/components/DeathCertificateCard";
 import BodyCountBar from "@/components/BodyCountBar";
 import DeathTicker from "@/components/DeathTicker";
+import EmptyGraveyardPanel from "@/components/EmptyGraveyardPanel";
 
 const POLL_INTERVAL_MS = parseInt(
   process.env.NEXT_PUBLIC_POLL_INTERVAL_MS ?? "120000",
@@ -160,14 +161,7 @@ export default function HomePage() {
             </p>
           </div>
         ) : tokens.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="font-mono text-accent text-lg tracking-wider mb-2">
-              NO BODIES FOUND YET
-            </p>
-            <p className="font-mono text-muted text-xs">
-              Connect Birdeye API data to start indexing the graveyard.
-            </p>
-          </div>
+          <EmptyGraveyardPanel />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
             {tokens.map((token, i) => (

@@ -151,7 +151,7 @@ export default function AutopsyReport({
               : "text-accent"
           }`}
         >
-          {token.verdict}
+          {token.verdict === "STILL ALIVE" ? "ALIVE / MONITORED" : token.verdict}
         </span>
       </div>
 
@@ -174,7 +174,7 @@ export default function AutopsyReport({
           </p>
           <p className="font-mono text-sm text-mono">
             {token.verdict === "STILL ALIVE"
-              ? "On Life Support"
+              ? "Active"
               : formatDate(token.diedAt)}
           </p>
         </div>
@@ -303,21 +303,64 @@ export default function AutopsyReport({
         </div>
       )}
 
-      <div className="bg-surface border border-border rounded-[4px] p-5 mb-8">
+      <div className={`border rounded-[4px] p-5 mb-8 ${token.verdict === "STILL ALIVE" ? "bg-green-500/5 border-green-500/20" : "bg-surface border-border"}`}>
         <p className="font-mono text-[10px] text-muted tracking-wider mb-2">
           OFFICIAL VERDICT
         </p>
-        <p className="font-serif text-2xl sm:text-3xl text-accent mb-2">
-          {token.verdict}
+        <p className={`font-serif text-2xl sm:text-3xl mb-2 ${token.verdict === "STILL ALIVE" ? "text-green-500" : "text-accent"}`}>
+          {token.verdict === "STILL ALIVE" ? "ALIVE / MONITORED" : token.verdict}
         </p>
         <p className="font-sans text-sm text-mono italic">
-          {token.oneLiner}
+          {token.verdict === "STILL ALIVE"
+            ? "This token shows vital signs. No death indicators detected by the verdict engine."
+            : token.oneLiner}
         </p>
         {token.verdict === "STILL ALIVE" && (
-          <p className="font-mono text-xs text-accent mt-3">
-            Patient is alive but on life support. Exit while you can.
-          </p>
+          <div className="mt-3 space-y-1">
+            <p className="font-mono text-[10px] text-muted tracking-wider">EVIDENCE</p>
+            <p className="font-sans text-xs text-mono">
+              Current price is {formatPrice(currentPrice)} with {formatNumber(token.holdersBagged)} holders.
+              {safeNumber(token.peakMcap) > 0 && ` Market cap reached ${formatMcap(token.peakMcap)}.`}
+              {safeNumber(data.currentLiquidity) > 0 && ` Liquidity pool holds ${formatMcap(data.currentLiquidity)}.`}
+              {" "}No rug-pull liquidity removal, abandonment, or fatal decline pattern found.
+            </p>
+          </div>
         )}
+      </div>
+
+      <div className="bg-surface border border-border rounded-[4px] p-5 mb-8">
+        <p className="font-mono text-[10px] text-muted tracking-wider mb-3">
+          BIRDEYE EVIDENCE SUMMARY
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+          <div className="flex justify-between font-mono text-xs py-1 border-b border-border/50">
+            <span className="text-muted">token_overview</span>
+            <span className="text-mono">MCap {formatMcap(token.peakMcap)} peak &rarr; {formatMcap(token.finalMcap)}</span>
+          </div>
+          <div className="flex justify-between font-mono text-xs py-1 border-b border-border/50">
+            <span className="text-muted">price</span>
+            <span className="text-mono">{formatPrice(currentPrice)}</span>
+          </div>
+          <div className="flex justify-between font-mono text-xs py-1 border-b border-border/50">
+            <span className="text-muted">token_security</span>
+            <span className="text-mono">{securityFlags.length} flag{securityFlags.length !== 1 ? "s" : ""} analyzed</span>
+          </div>
+          <div className="flex justify-between font-mono text-xs py-1 border-b border-border/50">
+            <span className="text-muted">ohlcv</span>
+            <span className="text-mono">{priceHistory.length} data point{priceHistory.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div className="flex justify-between font-mono text-xs py-1 border-b border-border/50">
+            <span className="text-muted">holders</span>
+            <span className="text-mono">{formatNumber(token.holdersBagged)}{topHoldersPct > 0 ? ` (top 10: ${topHoldersPct.toFixed(1)}%)` : ""}</span>
+          </div>
+          <div className="flex justify-between font-mono text-xs py-1 border-b border-border/50">
+            <span className="text-muted">liquidity</span>
+            <span className="text-mono">{formatMcap(safeNumber(data.currentLiquidity))}{safeNumber(token.liquidityRemovedPct) > 0 ? ` (${token.liquidityRemovedPct.toFixed(0)}% removed)` : ""}</span>
+          </div>
+        </div>
+        <p className="font-mono text-[10px] text-muted tracking-wider mt-3">
+          DATA FROM BIRDEYE DATA API — ALL ON-CHAIN, NOTHING FABRICATED
+        </p>
       </div>
 
       <div className="flex gap-3">
