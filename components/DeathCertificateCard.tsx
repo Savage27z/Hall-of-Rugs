@@ -35,6 +35,10 @@ function formatNumber(n: number): string {
   return n.toLocaleString("en-US");
 }
 
+function formatPercent(n: number): string {
+  return Number.isFinite(n) ? `${n.toFixed(1)}%` : "N/A";
+}
+
 function getVerdictColor(verdict: string): string {
   switch (verdict) {
     case "RUGGED":
@@ -131,7 +135,7 @@ export default function DeathCertificateCard({
                 LIQUIDITY REMOVED
               </p>
               <p className="font-mono text-sm sm:text-base text-accent">
-                {token.liquidityRemovedPct}%
+                {formatPercent(token.liquidityRemovedPct)}
               </p>
             </div>
           </div>

@@ -46,6 +46,11 @@ function formatNumber(n: number): string {
   return n.toLocaleString("en-US");
 }
 
+function formatPercent(n: number): string {
+  const v = typeof n === "number" && Number.isFinite(n) ? n : 0;
+  return `${v.toFixed(1)}%`;
+}
+
 function safeNumber(value: number | null | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
@@ -226,7 +231,7 @@ export default function AutopsyReport({
             LIQUIDITY REMOVED
           </p>
           <p className="font-mono text-lg text-accent">
-            {safeNumber(token.liquidityRemovedPct)}%
+            {formatPercent(token.liquidityRemovedPct)}
           </p>
         </div>
         <div className="bg-surface border border-border rounded-[4px] p-4">
@@ -242,7 +247,7 @@ export default function AutopsyReport({
             PRICE DROP
           </p>
           <p className="font-mono text-lg text-accent">
-            {safeNumber(token.priceDropPct).toFixed(2)}%
+            {formatPercent(token.priceDropPct)}
           </p>
         </div>
       </div>
