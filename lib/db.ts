@@ -191,7 +191,7 @@ export function getTodayStats(): {
   const biggestRow = db
     .prepare(
       `SELECT symbol, name, peak_mcap FROM dead_tokens
-       WHERE (died_at >= ? OR updated_at >= ?) AND verdict = 'RUGGED'
+       WHERE (died_at >= ? OR updated_at >= ?)
        ORDER BY peak_mcap DESC LIMIT 1`
     )
     .get(ts, ts) as

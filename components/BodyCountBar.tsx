@@ -99,7 +99,7 @@ export default function BodyCountBar({
               {stats?.biggestRugName ?? "N/A"}
             </p>
             <p className="font-mono text-[10px] text-muted tracking-wider mt-2">
-              BIGGEST RUG TODAY{biggest > 0 ? ` — ${formatLiquidity(biggest)}` : ""}
+              TOP DEATH TODAY{biggest > 0 ? ` — ${formatLiquidity(biggest)}` : ""}
             </p>
           </div>
         </div>
