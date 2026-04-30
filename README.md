@@ -4,7 +4,7 @@
 
 A dark-humour public obituary board for dead Solana tokens. Part official death certificate, part savage degen commentary. Browse the graveyard, perform autopsies, and visit the Hall of Shame.
 
-**Live URL:**  <!-- TODO: add after deployment -->
+**Live URL:** https://hall-of-rugs.vercel.app/
 
 Built for Birdeye Data BIP Competition Sprint 2 — April 2026
 
@@ -26,12 +26,15 @@ Built for Birdeye Data BIP Competition Sprint 2 — April 2026
 │  ┌────▼───────────────▼─────────────────▼────────┐  │
 │  │              API ROUTES (Server-side)          │  │
 │  │  /api/tokens/dead  /api/tokens/autopsy        │  │
-│  │  /api/stats/today                             │  │
+│  │  /api/tokens/radar  /api/stats/today           │  │
 │  └────┬──────────────────────────────────────────┘  │
 │       │                                             │
 │  ┌────▼────────┐  ┌─────────────┐  ┌────────────┐  │
 │  │ lib/birdeye │  │ lib/db      │  │lib/classify │  │
 │  │ (API Client)│  │ (SQLite)    │  │(Verdicts)   │  │
+│  │             │  │             │  │             │  │
+│  │ lib/token   │  │             │  │lib/oneliner │  │
+│  │  Metrics    │  │             │  │             │  │
 │  └────┬────────┘  └──────┬──────┘  └────────────┘  │
 │       │                  │                          │
 └───────┼──────────────────┼──────────────────────────┘
@@ -73,12 +76,18 @@ Open [http://localhost:3000](http://localhost:3000).
 |----------|-------------|---------|
 | `BIRDEYE_API_KEY` | Birdeye Data API key | (required for live data) |
 | `NEXT_PUBLIC_SITE_URL` | Public site URL | |
-| `POLL_INTERVAL_MS` | Client polling interval (ms) | `120000` |
+| `NEXT_PUBLIC_POLL_INTERVAL_MS` | Client polling interval (ms) | `120000` |
 | `RUG_LIQUIDITY_THRESHOLD` | Min liquidity % removed for RUGGED verdict | `0.80` |
 | `FAILED_LAUNCH_MCAP_THRESHOLD` | Max peak MCap for FAILED LAUNCH | `10000` |
 | `ABANDONED_VOLUME_DAYS` | Days of zero volume for ABANDONED | `7` |
 
-All data is real. Without `BIRDEYE_API_KEY`, discovery and autopsy routes return empty results or a 503 error — no mock or placeholder data is rendered.
+All data is real. Without `BIRDEYE_API_KEY`, discovery and autopsy routes return empty/informative responses — no mock or placeholder data is rendered. When no dead tokens are indexed, the homepage shows:
+
+- **Live Birdeye Radar**: a real-time scanner table of trending/new tokens with risk assessment from Birdeye overview data
+- **Suggested addresses**: clickable sample tokens (SOL, BONK, JUP, RAY, ORCA) for instant autopsy
+- **Proof points**: endpoints used, verdict engine summary, shareable obituary feature
+
+The graveyard populates organically as the scanner discovers tokens that match death criteria. No fake bodies are seeded.
 
 ## API Call Logging
 
@@ -104,11 +113,22 @@ In production usage with a valid Birdeye API key, the log accumulates naturally 
 ## Features
 
 - **Homepage Graveyard**: Live feed of dead tokens as death certificate cards with filter/sort
-- **Token Autopsy**: Deep-dive analysis with price charts, security flags, and verdicts
+- **Live Birdeye Radar**: Real-time scanner showing trending/new tokens with risk levels when graveyard is empty
+- **Token Autopsy**: Deep-dive analysis with price charts, security flags, verdicts, and Birdeye evidence summary
 - **Hall of Shame**: Leaderboard of the most brutal rugs ever indexed
 - **Classification Engine**: RUGGED / FAILED LAUNCH / ABANDONED / SLOW BLEED / STILL ALIVE
+- **Alive/Monitored**: Tokens that pass all checks show positive "Alive / Monitored" verdict with evidence
 - **Auto-polling**: Updates every 2 minutes
 - **Share**: Copy tweet-ready obituaries to clipboard
+
+## API Routes
+
+| Route | Purpose |
+|-------|----------|
+| `/api/tokens/dead` | Discover + list dead tokens from Birdeye new listings/trending |
+| `/api/tokens/autopsy` | Deep analysis: overview + security + OHLCV + price |
+| `/api/tokens/radar` | Live scanner: trending/new tokens with risk assessment |
+| `/api/stats/today` | Daily stats (bodies, liquidity removed, holders bagged) |
 
 ---
 

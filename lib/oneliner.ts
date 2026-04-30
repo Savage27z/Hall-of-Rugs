@@ -7,7 +7,7 @@ const ONE_LINERS: Record<Verdict, string> = {
     "The team pivoted to stealth mode. Very stealth. Permanently.",
   "SLOW BLEED": "Still technically alive. Technically.",
   "STILL ALIVE":
-    "Patient is alive but on life support. Exit while you can.",
+    "No death indicators found. Vital signs present.",
 };
 
 export function getOneLiner(verdict: Verdict): string {
