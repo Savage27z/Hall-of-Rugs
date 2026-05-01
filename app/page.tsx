@@ -7,7 +7,6 @@ import DeathCertificateCard from "@/components/DeathCertificateCard";
 import BodyCountBar from "@/components/BodyCountBar";
 import DeathTicker from "@/components/DeathTicker";
 import EmptyGraveyardPanel from "@/components/EmptyGraveyardPanel";
-import BirdeyeProofStrip from "@/components/BirdeyeProofStrip";
 
 const POLL_INTERVAL_MS = parseInt(
   process.env.NEXT_PUBLIC_POLL_INTERVAL_MS ?? "120000",
@@ -164,18 +163,15 @@ export default function HomePage() {
         ) : tokens.length === 0 ? (
           <EmptyGraveyardPanel />
         ) : (
-          <>
-            <BirdeyeProofStrip />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-6">
-              {tokens.map((token, i) => (
-                <DeathCertificateCard
-                  key={token.address}
-                  token={token}
-                  index={i}
-                />
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+            {tokens.map((token, i) => (
+              <DeathCertificateCard
+                key={token.address}
+                token={token}
+                index={i}
+              />
+            ))}
+          </div>
         )}
       </section>
 
